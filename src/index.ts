@@ -38,10 +38,10 @@ async function main() {
   // ZAP IN FLOW
 
   // TODO: calculate minPoolTokens for slippage
-  
-  zapIn(ZoneTokenAddress, "50", "0.001", Address0, "0x") //ZapIn with Zone
-  // zapIn(WethTokenAddress, "50", "1", Address0, "0x") //ZapIn with WETH
-  // zapIn(Address0, "50", "1", WethTokenAddress, "0x") //ZapIn with Native ETH. Will not work in current setup but will work on mainnet.
+
+  zapIn(ZoneTokenAddress, "50", "0.000000001", Address0, "0x") //ZapIn with Zone
+  zapIn(WethTokenAddress, "50", "0.000000001", Address0, "0x") //ZapIn with WETH
+  // zapIn(Address0, "50", "0.000000001", WethTokenAddress, "0x") //ZapIn with Native ETH. Will not work in current setup but will work on mainnet.
 
   // TODO: zapIn via any other token
   // let callData = await prepareSwapData(OtherTokenAddress, WethTokenAddress, "0.0001")
@@ -95,16 +95,16 @@ async function zapIn(tokenAddress: string, amount: string, minPoolTokens: string
     value: tokenAddress === Address0 ? amountToZap : 0
   })
   console.log("Estimated Gas:", gasEstimate);
-  try {
-    const zapTx = await zapContract.ZapIn(tokenAddress, amountToZap, minPoolTokensAdjusted, swapTarget, swapData, {
-      gasLimit: gasEstimate.mul(2)
-    });
+  // try {
+  //   const zapTx = await zapContract.ZapIn(tokenAddress, amountToZap, minPoolTokensAdjusted, swapTarget, swapData, {
+  //     gasLimit: gasEstimate.mul(2)
+  //   });
 
-    await zapTx.wait();
-    console.log("Zap in successful:", zapTx);
-  } catch (err) {
-    console.log("Zap in unsuccessful:", err);
-  }
+  //   await zapTx.wait();
+  //   console.log("Zap in successful:", zapTx);
+  // } catch (err) {
+  //   console.log("Zap in unsuccessful:", err);
+  // }
 }
 
 // HELPER FUNCTIONS
