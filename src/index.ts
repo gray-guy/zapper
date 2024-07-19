@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { erc20Abi } from "viem";
 import uniswapAbi from "./uniswapAbi.json";
 import zapContractAbi from "./zapAbi.json";
+import stakingAbi from "./stakingAbi.json";
 import { sendTransaction } from "viem/_types/actions/wallet/sendTransaction";
 
 dotenv.config();
@@ -16,9 +17,13 @@ if (!process.env.ROUTER_V2_ADDRESS) {
 if (!process.env.ZAP_ADDRESS) {
   throw new Error("ZAP_CONTRACT_ADDRESS is not defined in the environment variables");
 }
+if (!process.env.STAKING_ADDRESS) {
+  throw new Error("STAKING_ADDRESS is not defined in the environment variables");
+}
 
 const zapContractAddress = process.env.ZAP_ADDRESS;
 const routerContractAddress = process.env.ROUTER_V2_ADDRESS;
+const stakingContractAddress = process.env.STAKING_ADDRESS;
 
 // ALREADY SET IN FRONT-END
 const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_PROVIDER);
@@ -26,6 +31,7 @@ const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
 const zapContract = new ethers.Contract(zapContractAddress, zapContractAbi, signer);
 const routerContract = new ethers.Contract(routerContractAddress, uniswapAbi, signer);
+const stakingContract = new ethers.Contract(stakingContractAddress, stakingAbi, signer);
 
 // Token Pair
 const ZoneTokenAddress = "0x4d4B826a97Cdf819808A63F7A66223D79f8Cc9f5"; // ZONE
@@ -48,6 +54,10 @@ async function main() {
   // zapIn(OtherTokenAddress, "0.0001", "0.000001", routerContractAddress, callData)
 
   // TODO: ZAP OUT FLOW
+
+  // Staking Flow
+
+  // harvestRewards()
 }
 
 async function zapIn(tokenAddress: string, amount: string, minPoolTokens: string, swapTarget: string, swapData: string) {
@@ -106,6 +116,21 @@ async function zapIn(tokenAddress: string, amount: string, minPoolTokens: string
   // } catch (err) {
   //   console.log("Zap in unsuccessful:", err);
   // }
+}
+
+async function harvestRewards() {
+  const gasEstimate = await stakingContract.estimateGas.harvestRewards()
+  console.log("Estimated Gas:", gasEstimate);
+  try {
+    const harvestTx = await stakingContract.harvestRewards({
+      gasLimit: gasEstimate.mul(2)
+    });
+
+    await harvestTx.wait();
+    console.log("Harvest successful:", harvestTx);
+  } catch (err) {
+    console.log("Harvest unsuccessful:", err);
+  }
 }
 
 // HELPER FUNCTIONS
