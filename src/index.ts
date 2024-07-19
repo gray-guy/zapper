@@ -57,7 +57,9 @@ async function main() {
 
   // Staking Flow
 
-  // harvestRewards()
+  harvestRewards()
+  // getUserDataFromStakingContract()
+  // getOtherDataFromStakingContract()
 }
 
 async function zapIn(tokenAddress: string, amount: string, minPoolTokens: string, swapTarget: string, swapData: string) {
@@ -121,16 +123,42 @@ async function zapIn(tokenAddress: string, amount: string, minPoolTokens: string
 async function harvestRewards() {
   const gasEstimate = await stakingContract.estimateGas.harvestRewards()
   console.log("Estimated Gas:", gasEstimate);
-  try {
-    const harvestTx = await stakingContract.harvestRewards({
-      gasLimit: gasEstimate.mul(2)
-    });
+  // try {
+  //   const harvestTx = await stakingContract.harvestRewards({
+  //     gasLimit: gasEstimate.mul(2)
+  //   });
 
-    await harvestTx.wait();
-    console.log("Harvest successful:", harvestTx);
-  } catch (err) {
-    console.log("Harvest unsuccessful:", err);
-  }
+  //   await harvestTx.wait();
+  //   console.log("Harvest successful:", harvestTx);
+  // } catch (err) {
+  //   console.log("Harvest unsuccessful:", err);
+  // }
+}
+
+async function getUserDataFromStakingContract() {
+
+  const getUserRewardsAccrued = await stakingContract.getUserRewardsAccrued(signer.address)
+  console.log("getUserRewardsAccrued===>", ethers.utils.formatUnits(getUserRewardsAccrued))
+
+  const userStakingData = await stakingContract.poolStaker(signer.address)
+  console.log("userStakingData amount===>", ethers.utils.formatUnits(userStakingData[0]))
+  console.log("userStakingData rewards===>", ethers.utils.formatUnits(userStakingData[1]))
+  console.log("userStakingData rewardDebt===>", ethers.utils.formatUnits(userStakingData[2]))
+}
+
+async function getOtherDataFromStakingContract() {
+
+  const accumulatedRewardsPerShare = await stakingContract.accumulatedRewardsPerShare()
+  console.log("accumulatedRewardsPerShare===>", ethers.utils.formatUnits(accumulatedRewardsPerShare))
+
+  const lastRewardedTimestamp = await stakingContract.lastRewardedTimestamp()
+  console.log("lastRewardedTimestamp===>", ethers.utils.formatUnits(lastRewardedTimestamp))
+
+  const rewardTokensPerSecond = await stakingContract.rewardTokensPerSecond()
+  console.log("rewardTokensPerSecond===>", ethers.utils.formatUnits(rewardTokensPerSecond))
+
+  const tokensStaked = await stakingContract.tokensStaked()
+  console.log("tokensStaked===>", ethers.utils.formatUnits(tokensStaked))
 }
 
 // HELPER FUNCTIONS
