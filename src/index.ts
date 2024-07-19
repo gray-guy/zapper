@@ -28,24 +28,24 @@ const zapContract = new ethers.Contract(zapContractAddress, zapContractAbi, sign
 const routerContract = new ethers.Contract(routerContractAddress, uniswapAbi, signer);
 
 // Token Pair
-const ZoneTokenAddress = "0x4F370c8D7c5Af3Aa99eC08990f132b502fC1b055"; // ZONE
-const WethTokenAddress = "0x2A416168ceA12820E288d36f77C1b7f936F4e228"; // WETH
+const ZoneTokenAddress = "0x4d4B826a97Cdf819808A63F7A66223D79f8Cc9f5"; // ZONE
+const WethTokenAddress = "0x0dE8FCAE8421fc79B29adE9ffF97854a424Cad09"; // WBNB now, mainnet will be WETH
 const Address0 = "0x0000000000000000000000000000000000000000"
 
-// const OtherTokenAddress = "0x337610d27c682E347C9cD60BD4b3b107C9d34dDd"; // USDT
+const OtherTokenAddress = "0x337610d27c682E347C9cD60BD4b3b107C9d34dDd"; // USDT
 
 async function main() {
   // ZAP IN FLOW
 
   // TODO: calculate minPoolTokens for slippage
 
-  zapIn(ZoneTokenAddress, "50", "0.000000001", Address0, "0x") //ZapIn with Zone
-  zapIn(WethTokenAddress, "50", "0.000000001", Address0, "0x") //ZapIn with WETH
-  // zapIn(Address0, "50", "0.000000001", WethTokenAddress, "0x") //ZapIn with Native ETH. Will not work in current setup but will work on mainnet.
+  // zapIn(ZoneTokenAddress, "50", "0.000000001", Address0, "0x") //ZapIn with Zone
+  // zapIn(WethTokenAddress, "50", "0.000000001", Address0, "0x") //ZapIn with WETH
+  // zapIn(Address0, "0.001", "0.000000001", WethTokenAddress, "0x") //ZapIn with Native ETH. BNB now, mainnet will be ETH.
 
-  // TODO: zapIn via any other token
+  // zapIn via any other token
   // let callData = await prepareSwapData(OtherTokenAddress, WethTokenAddress, "0.0001")
-  // zapIn(OtherTokenAddress, "0.0001", "0.000001", routerContractAddress, callData) //ZapIn with any other token.
+  // zapIn(OtherTokenAddress, "0.0001", "0.000001", routerContractAddress, callData)
 
   // TODO: ZAP OUT FLOW
 }
@@ -54,7 +54,7 @@ async function zapIn(tokenAddress: string, amount: string, minPoolTokens: string
 
   let amountToZap;
   if (tokenAddress === Address0) {
-    amountToZap = ethers.utils.parseUnits(amount);    
+    amountToZap = ethers.utils.parseUnits(amount);   
   } else {
     const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
     const decimals = await getTokenDecimals(tokenAddress);
@@ -97,6 +97,7 @@ async function zapIn(tokenAddress: string, amount: string, minPoolTokens: string
   console.log("Estimated Gas:", gasEstimate);
   // try {
   //   const zapTx = await zapContract.ZapIn(tokenAddress, amountToZap, minPoolTokensAdjusted, swapTarget, swapData, {
+  //     value: tokenAddress === Address0 ? amountToZap : 0,
   //     gasLimit: gasEstimate.mul(2)
   //   });
 
