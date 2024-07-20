@@ -57,9 +57,9 @@ async function main() {
 
   // Staking Flow
 
-  harvestRewards()
-  // getUserDataFromStakingContract()
-  // getOtherDataFromStakingContract()
+  // harvestRewards()
+  getUserDataFromStakingContract()
+  getOtherDataFromStakingContract()
 }
 
 async function zapIn(tokenAddress: string, amount: string, minPoolTokens: string, swapTarget: string, swapData: string) {
@@ -135,6 +135,12 @@ async function harvestRewards() {
   // }
 }
 
+// 0. Last Rewards Timestamp
+// 1. Total staked (LP) => tokensStaked
+// 2. User staked (LP) => userStakingData amount
+// 3. User claimable rewards (ZONE) => TODO: userStakingData rewards
+// 4. APY (%) => TODO: accumulatedRewardsPerShare / rewardTokensPerSecond
+
 async function getUserDataFromStakingContract() {
 
   const getUserRewardsAccrued = await stakingContract.getUserRewardsAccrued(signer.address)
@@ -152,7 +158,7 @@ async function getOtherDataFromStakingContract() {
   console.log("accumulatedRewardsPerShare===>", ethers.utils.formatUnits(accumulatedRewardsPerShare))
 
   const lastRewardedTimestamp = await stakingContract.lastRewardedTimestamp()
-  console.log("lastRewardedTimestamp===>", ethers.utils.formatUnits(lastRewardedTimestamp))
+  console.log("lastRewardedTimestamp===>", lastRewardedTimestamp.toString())
 
   const rewardTokensPerSecond = await stakingContract.rewardTokensPerSecond()
   console.log("rewardTokensPerSecond===>", ethers.utils.formatUnits(rewardTokensPerSecond))
