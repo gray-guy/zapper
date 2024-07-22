@@ -59,7 +59,6 @@ async function main() {
 
   // harvestRewards()
   getUserDataFromStakingContract()
-  getOtherDataFromStakingContract()
 }
 
 async function zapIn(tokenAddress: string, amount: string, minPoolTokens: string, swapTarget: string, swapData: string) {
@@ -138,8 +137,8 @@ async function harvestRewards() {
 // 0. Last Rewards Timestamp
 // 1. Total staked (LP) => tokensStaked
 // 2. User staked (LP) => userStakingData amount
-// 3. User claimable rewards (ZONE) => TODO: userStakingData rewards
-// 4. APY (%) => TODO: accumulatedRewardsPerShare / rewardTokensPerSecond
+// 3. User claimable rewards (ZONE) => getUserRewardsAccrued
+// 4. APY (%) => APY 
 
 async function getUserDataFromStakingContract() {
 
@@ -150,12 +149,9 @@ async function getUserDataFromStakingContract() {
   console.log("userStakingData amount===>", ethers.utils.formatUnits(userStakingData[0]))
   console.log("userStakingData rewards===>", ethers.utils.formatUnits(userStakingData[1]))
   console.log("userStakingData rewardDebt===>", ethers.utils.formatUnits(userStakingData[2]))
-}
 
-async function getOtherDataFromStakingContract() {
-
-  const accumulatedRewardsPerShare = await stakingContract.accumulatedRewardsPerShare()
-  console.log("accumulatedRewardsPerShare===>", ethers.utils.formatUnits(accumulatedRewardsPerShare))
+  const tokensStaked = await stakingContract.tokensStaked()
+  console.log("tokensStaked===>", ethers.utils.formatUnits(tokensStaked))
 
   const lastRewardedTimestamp = await stakingContract.lastRewardedTimestamp()
   console.log("lastRewardedTimestamp===>", lastRewardedTimestamp.toString())
@@ -163,8 +159,10 @@ async function getOtherDataFromStakingContract() {
   const rewardTokensPerSecond = await stakingContract.rewardTokensPerSecond()
   console.log("rewardTokensPerSecond===>", ethers.utils.formatUnits(rewardTokensPerSecond))
 
-  const tokensStaked = await stakingContract.tokensStaked()
-  console.log("tokensStaked===>", ethers.utils.formatUnits(tokensStaked))
+  const totalRewardsPerYear = rewardTokensPerSecond.mul(31536000)
+  console.log("totalRewardsPerYear===>", ethers.utils.formatUnits(totalRewardsPerYear))
+  const APY = (totalRewardsPerYear.div(tokensStaked)).mul(100)
+  console.log("APY===>", APY.toString())
 }
 
 // HELPER FUNCTIONS
