@@ -339,6 +339,84 @@
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "tokenA",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "tokenB",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amountA",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amountB",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "feeOnTokenTransfer",
+                "type": "uint256"
+            }
+        ],
+        "name": "calculateLPTokens",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "toToken",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "lpTokensToBurn",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address[]",
+                "name": "pathWethToOut",
+                "type": "address[]"
+            },
+            {
+                "internalType": "address[]",
+                "name": "pathZoneToOut",
+                "type": "address[]"
+            },
+            {
+                "internalType": "uint256",
+                "name": "feeOnTokenTransfer",
+                "type": "uint256"
+            }
+        ],
+        "name": "calculateTokensOut",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "toTokensRec",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "deadline",
         "outputs": [
@@ -372,6 +450,45 @@
                 "internalType": "address",
                 "name": "",
                 "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_FromTokenContractAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address[]",
+                "name": "path",
+                "type": "address[]"
+            }
+        ],
+        "name": "quoteZapIn",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "amount0",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount1",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "lpTokens",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",
