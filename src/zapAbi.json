@@ -409,7 +409,17 @@
         "outputs": [
             {
                 "internalType": "uint256",
-                "name": "toTokensRec",
+                "name": "",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "",
                 "type": "uint256"
             }
         ],
@@ -471,6 +481,11 @@
                 "internalType": "address[]",
                 "name": "path",
                 "type": "address[]"
+            },
+            {
+                "internalType": "uint256",
+                "name": "feeOnTokenTransfer",
+                "type": "uint256"
             }
         ],
         "name": "quoteZapIn",

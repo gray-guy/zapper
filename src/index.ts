@@ -4,7 +4,6 @@ import { erc20Abi } from "viem";
 import uniswapAbi from "./uniswapAbi.json";
 import zapContractAbi from "./zapAbi.json";
 import stakingAbi from "./stakingAbi.json";
-import { sendTransaction } from "viem/_types/actions/wallet/sendTransaction";
 
 dotenv.config();
 
@@ -36,36 +35,35 @@ const stakingContract = new ethers.Contract(stakingContractAddress, stakingAbi, 
 // Token Pair
 const ZoneTokenAddress = "0x4d4B826a97Cdf819808A63F7A66223D79f8Cc9f5"; // ZONE
 const WethTokenAddress = "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd"; // WBNB now, mainnet will be WETH
-const Address0 = "0x0000000000000000000000000000000000000000"
+const PairAddress = "0x387B579EB0c1204f1DB886a56b575599eAd3bE4c" //ZONE/WETH pair. WBNB now, mainnet will be WETH
 
+const Address0 = "0x0000000000000000000000000000000000000000"
 const OtherTokenAddress = "0x337610d27c682E347C9cD60BD4b3b107C9d34dDd"; // USDT
 
-const FEES = 400
+const FEES = 0 // Mainnet will be 400
 
 async function main() {
   // ZAP IN FLOW
 
-  const zapInQuote = await getZapInQuote(ZoneTokenAddress, "10", [], FEES, 10) // ZapIn via ZONE
-  // const zapInQuote = await getZapInQuote(OtherTokenAddress, "0.001", [], FEES, 10) // ZapIn via WETH or Native ETH
+  // const zapInQuote = await getZapInQuote(ZoneTokenAddress, "10", [], FEES, 10) // ZapIn via ZONE
+  // const zapInQuote = await getZapInQuote(WethTokenAddress, "0.001", [], FEES, 10) // ZapIn via WETH or Native ETH
   // const zapInQuote = await getZapInQuote(OtherTokenAddress, "0.001", [OtherTokenAddress, WethTokenAddress], FEES, 10) // ZapIn via OtherToken
-  
-  zapIn(ZoneTokenAddress, "10", zapInQuote[3]) //ZapIn with Zone
-  // zapIn(WethTokenAddress, "0.001", zapInQuote[3]) //ZapIn with WETH
-  // zapIn(Address0, "0.001", zapInQuote[3]) //ZapIn with Native ETH. BNB now, mainnet will be ETH.
+
+  // zapIn(ZoneTokenAddress, "10", zapInQuote[3]) //ZapIn with Zone
+  // await zapIn(WethTokenAddress, "0.001", zapInQuote[3]) //ZapIn with WETH
+  // await zapIn(Address0, "0.001", zapInQuote[3]) //ZapIn with Native ETH. BNB now, mainnet will be ETH.
   // zapIn(OtherTokenAddress, "0.001", zapInQuote[3]) //ZapIn via OtherToken
 
   // ZAP OUT FLOW
 
-  const zapOutQuote = await getZapOutQuote(ZoneTokenAddress, "10", FEES, 10) // ZapOut via ZONE
-  // const zapOutQuote = await getZapOutQuote(WethTokenAddress, "0.001", FEES, 10) // ZapOut via WETH or Native ETH
-  // const zapOutQuote = await getZapOutQuote(OtherTokenAddress, "0.001", FEES, 10) // ZapOut via ZONE
+  // const zapOutQuote = await getZapOutQuote(ZoneTokenAddress, "0.00001", FEES, 10) // ZapOut via ZONE
+  // const zapOutQuote = await getZapOutQuote(WethTokenAddress, "0.00001", FEES, 10) // ZapOut via WETH or Native ETH
+  // const zapOutQuote = await getZapOutQuote(OtherTokenAddress, "0.00001", FEES, 10) // ZapOut via OtherToken
 
-  // TODO
-  // zapOut(ZoneTokenAddress, "10", zapOutQuote[1]) //ZapOut with Zone
-  // zapOut(WethTokenAddress, "0.001", zapOutQuote[1]) //ZapOut with WETH
-  // zapOut(Address0, "0.001", zapOutQuote[1]) //ZapOut with Native ETH. BNB now, mainnet will be ETH.
-  // zapOut(OtherTokenAddress, "0.001", zapOutQuote[1]) //ZapOut with OtherToken
-
+  // zapOut(ZoneTokenAddress, "0.00001", zapOutQuote) //ZapOut with Zone
+  // zapOut(WethTokenAddress, "0.00001", zapOutQuote) //ZapOut with WETH
+  // zapOut(Address0, "0.00001", zapOutQuote) //ZapOut with Native ETH. BNB now, mainnet will be ETH.
+  // zapOut(OtherTokenAddress, "0.00001", zapOutQuote) //ZapOut with OtherToken
 
   // STAKING FLOW
 
@@ -78,21 +76,19 @@ async function getZapInQuote(fromToken: string, amount: string, path: Array<Stri
   const decimals = await getTokenDecimals(fromToken)
   const amountIn = ethers.utils.parseUnits(amount, decimals)
 
-  const quotePairs = await zapContract.quoteZapIn(fromToken, amountIn, path)
-
-  const lpTokens = await zapContract.calculateLPTokens(ZoneTokenAddress, WethTokenAddress, quotePairs[0], quotePairs[1], feesBasisPoints)
+  const quoteData = await zapContract.quoteZapIn(fromToken, amountIn, path, feesBasisPoints)
 
   const slippage = 1 - Number(slippageTolerance) / 100;
-  const lpTokensWithSlippage = lpTokens.mul(ethers.BigNumber.from(Math.floor(slippage * 100))).div(ethers.BigNumber.from(100));
+  const lpTokensWithSlippage = quoteData[2].mul(ethers.BigNumber.from(Math.floor(slippage * 100))).div(ethers.BigNumber.from(100));
 
   console.log({
-    "zone": ethers.utils.formatUnits(quotePairs[0]),
-    "weth": ethers.utils.formatUnits(quotePairs[1]),
-    "lpTokens": ethers.utils.formatUnits(lpTokens),
+    "zone": ethers.utils.formatUnits(quoteData[0]),
+    "weth": ethers.utils.formatUnits(quoteData[1]),
+    "lpTokens": ethers.utils.formatUnits(quoteData[2]),
     "minLpTokens": ethers.utils.formatUnits(lpTokensWithSlippage)
   })
 
-  return [quotePairs[0], quotePairs[1], lpTokens, lpTokensWithSlippage]
+  return [quoteData[0], quoteData[1], quoteData[2], lpTokensWithSlippage]
 }
 
 async function getZapOutQuote(toToken: string, lpTokensAmount: string, feesBasisPoints: any, slippageTolerance: any) {
@@ -100,9 +96,9 @@ async function getZapOutQuote(toToken: string, lpTokensAmount: string, feesBasis
   const decimals = await getTokenDecimals(toToken)
   const lpTokensAdjusted = ethers.utils.parseUnits(lpTokensAmount);
 
-  let pathWeth:Array<String> = []
-  let pathZone:Array<String> = []
-  if(toToken !== ZoneTokenAddress && toToken !== WethTokenAddress) {
+  let pathWeth: Array<String> = []
+  let pathZone: Array<String> = []
+  if (toToken !== ZoneTokenAddress && toToken !== WethTokenAddress) {
     pathWeth = [WethTokenAddress, toToken]
     pathZone = [ZoneTokenAddress, WethTokenAddress, toToken]
   } else {
@@ -110,16 +106,19 @@ async function getZapOutQuote(toToken: string, lpTokensAmount: string, feesBasis
     pathZone = [ZoneTokenAddress, toToken]
   }
 
-  const tokens = await zapContract.calculateTokensOut(toToken, lpTokensAdjusted, pathWeth, pathZone, feesBasisPoints)
+  const quoteData = await zapContract.calculateTokensOut(toToken, lpTokensAdjusted, pathWeth, pathZone, feesBasisPoints)
+  
   const slippage = 1 - Number(slippageTolerance) / 100;
-  const tokensWithSlippage = tokens.mul(ethers.BigNumber.from(Math.floor(slippage * 100))).div(ethers.BigNumber.from(100));
+  const tokensWithSlippage = quoteData[2].mul(ethers.BigNumber.from(Math.floor(slippage * 100))).div(ethers.BigNumber.from(100));
 
   console.log({
-    "tokens": ethers.utils.formatUnits(tokens, decimals),
+    "zone": ethers.utils.formatUnits(quoteData[0]),
+    "weth": ethers.utils.formatUnits(quoteData[1]),
+    "tokens": ethers.utils.formatUnits(quoteData[2], decimals),
     "minTokens": ethers.utils.formatUnits(tokensWithSlippage, decimals)
   })
 
-  return [tokens, tokensWithSlippage]
+  return [quoteData[0], quoteData[1], quoteData[2], tokensWithSlippage]
 }
 
 async function zapIn(tokenAddress: string, amount: string, minPoolTokens: any) {
@@ -168,7 +167,16 @@ async function zapIn(tokenAddress: string, amount: string, minPoolTokens: any) {
 
   if (tokenAddress !== ZoneTokenAddress && tokenAddress !== WethTokenAddress && tokenAddress !== Address0) {
     swapTarget = routerContractAddress
-    swapData = await prepareSwapDataZapIn(tokenAddress, WethTokenAddress, amount)
+
+    let path = [tokenAddress, WethTokenAddress];
+    const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
+    swapData = routerContract.interface.encodeFunctionData("swapExactTokensForTokens", [
+      amountToZap,
+      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
+      path,
+      zapContractAddress, // The recipient of the tokens post-swap
+      deadline
+    ]);
   }
 
   const gasEstimate = await zapContract.estimateGas.ZapIn(tokenAddress, amountToZap, minPoolTokens, swapTarget, swapData, {
@@ -188,27 +196,123 @@ async function zapIn(tokenAddress: string, amount: string, minPoolTokens: any) {
   // }
 }
 
-async function zapOut(tokenAddress: string, lpTokensAmount: string, minTokens: any) {
+async function zapOut(tokenAddress: string, lpTokensAmount: string, zapOutQuoteData: any) {
 
-  const lpTokensAdjusted = ethers.utils.parseUnits(lpTokensAmount);
+  const tokenContract = new ethers.Contract(PairAddress, erc20Abi, signer);
+  const decimals = await getTokenDecimals(PairAddress);
+  
+  const lpTokensAdjusted = ethers.utils.parseUnits(lpTokensAmount, decimals);
 
-  let swapTargets = [WethTokenAddress, routerContractAddress]
-  let path = [WethTokenAddress, ZoneTokenAddress]
+  const allowance = await checkAllowance(PairAddress)
+  console.log("allowance===>", ethers.utils.formatUnits(allowance, decimals))
+  if (allowance.lt(lpTokensAdjusted)) {
+    console.log("ALLOWANCE LOW, TRANSACTION TO APPROVE TOKEN SPEND");
+    try {
+      const approveTx = await tokenContract.approve(
+        process.env.ZAP_ADDRESS,
+        lpTokensAdjusted
+      );
 
-  const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
-  const swapData = []
-  swapData[0] = routerContract.interface.encodeFunctionData("swapExactTokensForTokensSupportingFeeOnTransferTokens", [
-    minTokens,
-    ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
-    path,
-    zapContractAddress, // The recipient of the tokens post-swap
-    deadline
-  ]);
+      const approveReceipt = await approveTx.wait();
 
-  console.log(swapData)
+      // Check if the transaction was successful
+      if (approveReceipt.status === 1) {
+        const newAllowance = await checkAllowance(PairAddress);
+        console.log("newAllowance===>", ethers.utils.formatUnits(newAllowance, decimals));
+      } else {
+        console.log("Approve transaction failed");
+        return;
+      }
+    } catch (err) {
+      console.log("Approve Failed", err);
+      return;
+    }
+  } else {
+    console.log("ALLOWANCE MATCHED, CONTINUE");
+  }
 
-  const gasEstimate = await zapContract.estimateGas.ZapOut(tokenAddress, lpTokensAdjusted, minTokens, swapTargets, swapData)
+  let swapTargets, swapData;
+
+  if (tokenAddress === ZoneTokenAddress) {
+
+    swapTargets = [routerContractAddress, routerContractAddress]
+
+    let path = [WethTokenAddress, ZoneTokenAddress]
+    const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
+    let callData = routerContract.interface.encodeFunctionData("swapExactTokensForTokensSupportingFeeOnTransferTokens", [
+      zapOutQuoteData[1], // WETH amount
+      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
+      path,
+      zapContractAddress, // The recipient of the tokens post-swap
+      deadline
+    ]);
+  
+    swapData = ["0x", callData]
+  } else if (tokenAddress === WethTokenAddress) {
+
+    swapTargets = [routerContractAddress, routerContractAddress]
+    
+    let path = [ZoneTokenAddress, WethTokenAddress]
+    const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
+    let callData = routerContract.interface.encodeFunctionData("swapExactTokensForTokensSupportingFeeOnTransferTokens", [
+      zapOutQuoteData[0], // ZONE amount
+      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
+      path,
+      zapContractAddress, // The recipient of the tokens post-swap
+      deadline
+    ]);
+
+    swapData = [callData, "0x"] //TODO: Switch order on Mainnet
+  } else if (tokenAddress === Address0) {
+
+    swapTargets = [routerContractAddress, routerContractAddress]
+
+    let path = [ZoneTokenAddress, WethTokenAddress]
+    const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
+    let callData = routerContract.interface.encodeFunctionData("swapExactTokensForETHSupportingFeeOnTransferTokens", [
+      zapOutQuoteData[0], // ZONE amount
+      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
+      path,
+      zapContractAddress, // The recipient of the tokens post-swap
+      deadline
+    ]);
+
+    swapData = [callData, "0x"] //TODO: Switch order on Mainnet
+  } else {
+
+    swapTargets = [routerContractAddress, routerContractAddress]
+
+    let pathWethToOtherToken = [WethTokenAddress, OtherTokenAddress]
+    let pathZoneToOtherToken = [ZoneTokenAddress, WethTokenAddress, OtherTokenAddress]
+    const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
+    let callData_0 = routerContract.interface.encodeFunctionData("swapExactTokensForTokens", [
+      zapOutQuoteData[1], // WETH amount
+      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
+      pathWethToOtherToken,
+      zapContractAddress, // The recipient of the tokens post-swap
+      deadline
+    ]);
+    let callData_1 = routerContract.interface.encodeFunctionData("swapExactTokensForTokensSupportingFeeOnTransferTokens", [
+      zapOutQuoteData[0], // ZONE amount
+      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
+      pathZoneToOtherToken,
+      zapContractAddress, // The recipient of the tokens post-swap
+      deadline
+    ]);
+
+    swapData = [callData_0, callData_1]
+  }
+
+  const gasEstimate = await zapContract.estimateGas.ZapOut(tokenAddress, lpTokensAdjusted, zapOutQuoteData[3], swapTargets, swapData)
   console.log("Estimated Gas:", gasEstimate);
+  // try {
+  //   const zapTx = await zapContract.ZapOut(tokenAddress, lpTokensAdjusted, zapOutQuoteData[3], swapTargets, swapData);
+
+  //   await zapTx.wait();
+  //   console.log("Zap in successful:", zapTx);
+  // } catch (err) {
+  //   console.log("Zap in unsuccessful:", err);
+  // }
 }
 
 async function harvestRewards() {
@@ -258,26 +362,6 @@ async function getUserDataFromStakingContract() {
 }
 
 // HELPER FUNCTIONS
-
-async function prepareSwapDataZapIn(fromToken: string, toToken: string, amount: string): Promise<string> {
-  const decimals = await getTokenDecimals(fromToken);
-  const amountToSwap = ethers.utils.parseUnits(amount, decimals); // Adjust the decimal according to the token
-
-  // Define the path for the swap
-  const path = [fromToken, toToken];
-
-  // Encode the swap function call
-  const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
-  const swapData = routerContract.interface.encodeFunctionData("swapExactTokensForTokens", [
-      amountToSwap,
-      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
-      path,
-      zapContractAddress, // The recipient of the tokens post-swap
-      deadline
-  ]);
-
-  return swapData;
-}
 
 // Check token allowance
 async function checkAllowance(token: string) {
