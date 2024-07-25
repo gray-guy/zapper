@@ -46,24 +46,24 @@ async function main() {
   // ZAP IN FLOW
 
   // const zapInQuote = await getZapInQuote(ZoneTokenAddress, "10", [], FEES, 10) // ZapIn via ZONE
-  // const zapInQuote = await getZapInQuote(WethTokenAddress, "0.001", [], FEES, 10) // ZapIn via WETH or Native ETH
+  // const zapInQuote = await getZapInQuote(WethTokenAddress, "0.0000001", [], FEES, 10) // ZapIn via WETH or Native ETH
   // const zapInQuote = await getZapInQuote(OtherTokenAddress, "0.001", [OtherTokenAddress, WethTokenAddress], FEES, 10) // ZapIn via OtherToken
 
   // zapIn(ZoneTokenAddress, "10", zapInQuote[3]) //ZapIn with Zone
-  // await zapIn(WethTokenAddress, "0.001", zapInQuote[3]) //ZapIn with WETH
-  // await zapIn(Address0, "0.001", zapInQuote[3]) //ZapIn with Native ETH. BNB now, mainnet will be ETH.
+  // zapIn(WethTokenAddress, "0.0000001", zapInQuote[3]) //ZapIn with WETH
+  // zapIn(Address0, "0.001", zapInQuote[3]) //ZapIn with Native ETH. BNB now, mainnet will be ETH.
   // zapIn(OtherTokenAddress, "0.001", zapInQuote[3]) //ZapIn via OtherToken
 
   // ZAP OUT FLOW
 
   // const zapOutQuote = await getZapOutQuote(ZoneTokenAddress, "0.00001", FEES, 10) // ZapOut via ZONE
   // const zapOutQuote = await getZapOutQuote(WethTokenAddress, "0.00001", FEES, 10) // ZapOut via WETH or Native ETH
-  // const zapOutQuote = await getZapOutQuote(OtherTokenAddress, "0.00001", FEES, 10) // ZapOut via OtherToken
+  const zapOutQuote = await getZapOutQuote(OtherTokenAddress, "0.00001", FEES, 10) // ZapOut via OtherToken
 
   // zapOut(ZoneTokenAddress, "0.00001", zapOutQuote) //ZapOut with Zone
   // zapOut(WethTokenAddress, "0.00001", zapOutQuote) //ZapOut with WETH
   // zapOut(Address0, "0.00001", zapOutQuote) //ZapOut with Native ETH. BNB now, mainnet will be ETH.
-  // zapOut(OtherTokenAddress, "0.00001", zapOutQuote) //ZapOut with OtherToken
+  zapOut(OtherTokenAddress, "0.00001", zapOutQuote) //ZapOut with OtherToken
 
   // STAKING FLOW
 
@@ -94,6 +94,7 @@ async function getZapInQuote(fromToken: string, amount: string, path: Array<Stri
 async function getZapOutQuote(toToken: string, lpTokensAmount: string, feesBasisPoints: any, slippageTolerance: any) {
 
   const decimals = await getTokenDecimals(toToken)
+  console.log("decimals===>", decimals)
   const lpTokensAdjusted = ethers.utils.parseUnits(lpTokensAmount);
 
   let pathWeth: Array<String> = []
@@ -383,20 +384,3 @@ async function getTokenDecimals(tokenAddress: any) {
 }
 
 main();
-
-// const zapInData = zapContract.interface.encodeFunctionData(
-//   "ZapIn",
-//   [
-//     tokenAddress,
-//     amountToZap,
-//     minPoolTokensAdjusted,
-//     swapTarget,
-//     swapData
-//   ]
-// );
-
-// const zapTx = await sendTransaction(signer, {
-//   to: zapContractAddress,
-//   data: zapInData,
-//   gasLimit: 1000000,
-// })
