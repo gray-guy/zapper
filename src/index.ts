@@ -45,25 +45,25 @@ const FEES = 0 // Mainnet will be 400
 async function main() {
   // ZAP IN FLOW
 
-  // const zapInQuote = await getZapInQuote(ZoneTokenAddress, "10", [], FEES, 10) // ZapIn via ZONE
+  const zapInQuote = await getZapInQuote(ZoneTokenAddress, "10", [], FEES, 10) // ZapIn via ZONE
   // const zapInQuote = await getZapInQuote(WethTokenAddress, "0.0000001", [], FEES, 10) // ZapIn via WETH or Native ETH
   // const zapInQuote = await getZapInQuote(OtherTokenAddress, "0.001", [OtherTokenAddress, WethTokenAddress], FEES, 10) // ZapIn via OtherToken
 
-  // zapIn(ZoneTokenAddress, "10", zapInQuote[3]) //ZapIn with Zone
-  // zapIn(WethTokenAddress, "0.0000001", zapInQuote[3]) //ZapIn with WETH
-  // zapIn(Address0, "0.001", zapInQuote[3]) //ZapIn with Native ETH. BNB now, mainnet will be ETH.
+  zapIn(ZoneTokenAddress, "10", zapInQuote[3]); //ZapIn with Zone
+  // zapIn(WethTokenAddress, "0.0000001", zapInQuote[3]); //ZapIn with WETH
+  // zapIn(Address0, "0.0000001", zapInQuote[3]); //ZapIn with Native ETH. BNB now, mainnet will be ETH.
   // zapIn(OtherTokenAddress, "0.001", zapInQuote[3]) //ZapIn via OtherToken
 
   // ZAP OUT FLOW
 
   // const zapOutQuote = await getZapOutQuote(ZoneTokenAddress, "0.00001", FEES, 10) // ZapOut via ZONE
-  // const zapOutQuote = await getZapOutQuote(WethTokenAddress, "0.00001", FEES, 10) // ZapOut via WETH or Native ETH
-  const zapOutQuote = await getZapOutQuote(OtherTokenAddress, "0.00001", FEES, 10) // ZapOut via OtherToken
+  // const zapOutQuote = await getZapOutQuote(WethTokenAddress, "0.01", FEES, 10) // ZapOut via WETH or Native ETH
+  // const zapOutQuote = await getZapOutQuote(OtherTokenAddress, "0.1", FEES, 10) // ZapOut via OtherToken
 
   // zapOut(ZoneTokenAddress, "0.00001", zapOutQuote) //ZapOut with Zone
-  // zapOut(WethTokenAddress, "0.00001", zapOutQuote) //ZapOut with WETH
+  // zapOut(WethTokenAddress, "0.01", zapOutQuote) //ZapOut with WETH
   // zapOut(Address0, "0.00001", zapOutQuote) //ZapOut with Native ETH. BNB now, mainnet will be ETH.
-  zapOut(OtherTokenAddress, "0.00001", zapOutQuote) //ZapOut with OtherToken
+  // zapOut(OtherTokenAddress, "0.1", zapOutQuote); //ZapOut with OtherToken
 
   // STAKING FLOW
 
@@ -111,10 +111,9 @@ async function getZapOutQuote(toToken: string, lpTokensAmount: string, feesBasis
   
   const slippage = 1 - Number(slippageTolerance) / 100;
   const tokensWithSlippage = quoteData[2].mul(ethers.BigNumber.from(Math.floor(slippage * 100))).div(ethers.BigNumber.from(100));
-
   console.log({
-    "zone": ethers.utils.formatUnits(quoteData[0]),
-    "weth": ethers.utils.formatUnits(quoteData[1]),
+    "weth": ethers.utils.formatUnits(quoteData[0]),
+    "zone": ethers.utils.formatUnits(quoteData[1]),
     "tokens": ethers.utils.formatUnits(quoteData[2], decimals),
     "minTokens": ethers.utils.formatUnits(tokensWithSlippage, decimals)
   })
@@ -287,21 +286,21 @@ async function zapOut(tokenAddress: string, lpTokensAmount: string, zapOutQuoteD
     let pathZoneToOtherToken = [ZoneTokenAddress, WethTokenAddress, OtherTokenAddress]
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
     let callData_0 = routerContract.interface.encodeFunctionData("swapExactTokensForTokens", [
-      zapOutQuoteData[1], // WETH amount
+      zapOutQuoteData[0], // WETH amount
       ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
       pathWethToOtherToken,
       zapContractAddress, // The recipient of the tokens post-swap
       deadline
     ]);
     let callData_1 = routerContract.interface.encodeFunctionData("swapExactTokensForTokensSupportingFeeOnTransferTokens", [
-      zapOutQuoteData[0], // ZONE amount
+      zapOutQuoteData[1], // ZONE amount
       ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
       pathZoneToOtherToken,
       zapContractAddress, // The recipient of the tokens post-swap
       deadline
     ]);
-
-    swapData = [callData_0, callData_1]
+    
+    swapData = [callData_1, callData_0];
   }
 
   const gasEstimate = await zapContract.estimateGas.ZapOut(tokenAddress, lpTokensAdjusted, zapOutQuoteData[3], swapTargets, swapData)
