@@ -43,6 +43,9 @@ const OtherTokenAddress = "0x337610d27c682E347C9cD60BD4b3b107C9d34dDd"; // USDT
 const FEES = 0 // Mainnet will be 400
 
 async function main() {
+
+  await getBalances()
+
   // ZAP IN FLOW
 
   // const zapInQuote = await getZapInQuote(ZoneTokenAddress, "10", [], FEES, 10) // ZapIn via ZONE
@@ -51,7 +54,7 @@ async function main() {
 
   // zapIn(ZoneTokenAddress, "10", zapInQuote[3]) //ZapIn with Zone
   // zapIn(WethTokenAddress, "0.0000001", zapInQuote[3]) //ZapIn with WETH
-  // zapIn(Address0, "0.001", zapInQuote[3]) //ZapIn with Native ETH. BNB now, mainnet will be ETH.
+  // zapIn(Address0, "0.0000001", zapInQuote[3]) //ZapIn with Native ETH. BNB now, mainnet will be ETH.
   // zapIn(OtherTokenAddress, "0.001", zapInQuote[3]) //ZapIn via OtherToken
 
   // ZAP OUT FLOW
@@ -107,14 +110,14 @@ async function getZapOutQuote(toToken: string, lpTokensAmount: string, feesBasis
     pathZone = [ZoneTokenAddress, toToken]
   }
 
-  const quoteData = await zapContract.calculateTokensOut(toToken, lpTokensAdjusted, pathWeth, pathZone, feesBasisPoints)
+  const quoteData = await zapContract.calculateTokensOut(toToken, lpTokensAdjusted, pathZone, pathWeth, feesBasisPoints) // TODO: Switch path on Mainnet 
   
   const slippage = 1 - Number(slippageTolerance) / 100;
   const tokensWithSlippage = quoteData[2].mul(ethers.BigNumber.from(Math.floor(slippage * 100))).div(ethers.BigNumber.from(100));
 
   console.log({
-    "zone": ethers.utils.formatUnits(quoteData[0]),
-    "weth": ethers.utils.formatUnits(quoteData[1]),
+    "weth": ethers.utils.formatUnits(quoteData[0]),
+    "zone": ethers.utils.formatUnits(quoteData[1]),
     "tokens": ethers.utils.formatUnits(quoteData[2], decimals),
     "minTokens": ethers.utils.formatUnits(tokensWithSlippage, decimals)
   })
@@ -241,7 +244,7 @@ async function zapOut(tokenAddress: string, lpTokensAmount: string, zapOutQuoteD
     let path = [WethTokenAddress, ZoneTokenAddress]
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
     let callData = routerContract.interface.encodeFunctionData("swapExactTokensForTokensSupportingFeeOnTransferTokens", [
-      zapOutQuoteData[1], // WETH amount
+      zapOutQuoteData[0], // WETH amount
       ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
       path,
       zapContractAddress, // The recipient of the tokens post-swap
@@ -256,7 +259,7 @@ async function zapOut(tokenAddress: string, lpTokensAmount: string, zapOutQuoteD
     let path = [ZoneTokenAddress, WethTokenAddress]
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
     let callData = routerContract.interface.encodeFunctionData("swapExactTokensForTokensSupportingFeeOnTransferTokens", [
-      zapOutQuoteData[0], // ZONE amount
+      zapOutQuoteData[1], // ZONE amount
       ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
       path,
       zapContractAddress, // The recipient of the tokens post-swap
@@ -271,7 +274,7 @@ async function zapOut(tokenAddress: string, lpTokensAmount: string, zapOutQuoteD
     let path = [ZoneTokenAddress, WethTokenAddress]
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
     let callData = routerContract.interface.encodeFunctionData("swapExactTokensForETHSupportingFeeOnTransferTokens", [
-      zapOutQuoteData[0], // ZONE amount
+      zapOutQuoteData[1], // ZONE amount
       ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
       path,
       zapContractAddress, // The recipient of the tokens post-swap
@@ -287,21 +290,21 @@ async function zapOut(tokenAddress: string, lpTokensAmount: string, zapOutQuoteD
     let pathZoneToOtherToken = [ZoneTokenAddress, WethTokenAddress, OtherTokenAddress]
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
     let callData_0 = routerContract.interface.encodeFunctionData("swapExactTokensForTokens", [
-      zapOutQuoteData[1], // WETH amount
+      zapOutQuoteData[0], // WETH amount
       ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
       pathWethToOtherToken,
       zapContractAddress, // The recipient of the tokens post-swap
       deadline
     ]);
     let callData_1 = routerContract.interface.encodeFunctionData("swapExactTokensForTokensSupportingFeeOnTransferTokens", [
-      zapOutQuoteData[0], // ZONE amount
+      zapOutQuoteData[1], // ZONE amount
       ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
       pathZoneToOtherToken,
       zapContractAddress, // The recipient of the tokens post-swap
       deadline
     ]);
 
-    swapData = [callData_0, callData_1]
+    swapData = [callData_1, callData_0]
   }
 
   const gasEstimate = await zapContract.estimateGas.ZapOut(tokenAddress, lpTokensAdjusted, zapOutQuoteData[3], swapTargets, swapData)
@@ -381,6 +384,30 @@ async function getTokenDecimals(tokenAddress: any) {
   const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
   const decimals = await tokenContract.decimals();
   return decimals;
+}
+
+async function getBalances() {
+  const ZoneTokenContract = new ethers.Contract(ZoneTokenAddress, erc20Abi, signer);
+  const zoneBalance = await ZoneTokenContract.balanceOf(signer.address)
+
+  const WethTokenContract = new ethers.Contract(WethTokenAddress, erc20Abi, signer);
+  const wethBalance = await WethTokenContract.balanceOf(signer.address)
+
+  const OtherTokenContract = new ethers.Contract(OtherTokenAddress, erc20Abi, signer);
+  const otherTokenDecimals = await OtherTokenContract.decimals()
+  const otherBalance = await OtherTokenContract.balanceOf(signer.address)
+
+  const userStakingData = await stakingContract.poolStaker(signer.address)
+
+  const nativeBalance = await provider.getBalance(signer.address)
+
+  console.log({
+    "zoneBalance":  ethers.utils.formatUnits(zoneBalance),
+    "wethBalance": ethers.utils.formatUnits(wethBalance),
+    "otherBalance": ethers.utils.formatUnits(otherBalance, otherTokenDecimals),
+    "nativeBalance": ethers.utils.formatUnits(nativeBalance),
+    "stakedLP": ethers.utils.formatUnits(userStakingData[0]),
+  })
 }
 
 main();
