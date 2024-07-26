@@ -176,7 +176,7 @@ async function zapIn(tokenAddress: string, amount: string, minPoolTokens: any) {
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
     swapData = routerContract.interface.encodeFunctionData("swapExactTokensForTokens", [
       amountToZap,
-      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
+      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. No need to calculate here.
       path,
       zapContractAddress, // The recipient of the tokens post-swap
       deadline
@@ -245,7 +245,7 @@ async function zapOut(tokenAddress: string, lpTokensAmount: string, zapOutQuoteD
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
     let callData = routerContract.interface.encodeFunctionData("swapExactTokensForTokensSupportingFeeOnTransferTokens", [
       zapOutQuoteData[0], // WETH amount
-      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
+      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. No need to calculate here.
       path,
       zapContractAddress, // The recipient of the tokens post-swap
       deadline
@@ -260,7 +260,7 @@ async function zapOut(tokenAddress: string, lpTokensAmount: string, zapOutQuoteD
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
     let callData = routerContract.interface.encodeFunctionData("swapExactTokensForTokensSupportingFeeOnTransferTokens", [
       zapOutQuoteData[1], // ZONE amount
-      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
+      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. No need to calculate here.
       path,
       zapContractAddress, // The recipient of the tokens post-swap
       deadline
@@ -275,7 +275,7 @@ async function zapOut(tokenAddress: string, lpTokensAmount: string, zapOutQuoteD
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
     let callData = routerContract.interface.encodeFunctionData("swapExactTokensForETHSupportingFeeOnTransferTokens", [
       zapOutQuoteData[1], // ZONE amount
-      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
+      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. No need to calculate here.
       path,
       zapContractAddress, // The recipient of the tokens post-swap
       deadline
@@ -291,14 +291,14 @@ async function zapOut(tokenAddress: string, lpTokensAmount: string, zapOutQuoteD
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current time
     let callData_0 = routerContract.interface.encodeFunctionData("swapExactTokensForTokens", [
       zapOutQuoteData[0], // WETH amount
-      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
+      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. No need to calculate here.
       pathWethToOtherToken,
       zapContractAddress, // The recipient of the tokens post-swap
       deadline
     ]);
     let callData_1 = routerContract.interface.encodeFunctionData("swapExactTokensForTokensSupportingFeeOnTransferTokens", [
       zapOutQuoteData[1], // ZONE amount
-      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. TODO
+      ethers.constants.Zero, // assuming 0 as the minimum amount out for estimation purposes. No need to calculate here.
       pathZoneToOtherToken,
       zapContractAddress, // The recipient of the tokens post-swap
       deadline
